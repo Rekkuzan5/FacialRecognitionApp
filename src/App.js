@@ -1,10 +1,16 @@
 import { Component } from 'react';
 import Particles from 'react-tsparticles';
+import Clarifai from 'clarifai';
 import Navigation from './components/Navigation/Navigation';
+import FaceRecognition from './components/FaceRecognition/FaceRecognition';
 import Logo from './components/Logo/Logo';
 import ImageLinkForm from './components/ImageLinkForm/ImageLinkForm';
 import Rank from './components/Rank/Rank';
 import './App.css';
+
+const app = new Clarifai.App({
+  apiKey: "d08c145fd89d47639d2691df827efcf4",
+ });
 
 const particleOptions = {
   //id="tsparticles",
@@ -93,15 +99,27 @@ class App extends Component {
     super();
     this.state = {
       input: '',
+      imageURL: '',
     }
   }
 
   onInputChange = (event) => {
-    console.log(event.target.value);
+    this.setState({input: event.target.value});
   }
 
   onButtonSubmit = () => {
-    console.log('click');
+    this.setState({ imageURL: this.state.input })
+    app.models
+    .predict(
+    Clarifai.FACE_DETECT_MODEL,
+     // THE JPG
+    this.state.input)
+    .then((response) => {
+      console.log(response.outputs[0].data.regions[0].region_info.bounding_box);
+    })
+    .catch((err) => {
+      console.log(err);
+    });
   }
 
   render() {
@@ -114,7 +132,7 @@ class App extends Component {
         <Logo />
         <Rank />
         <ImageLinkForm onInputChange={this.onInputChange} onButtonSubmit={this.onButtonSubmit}/>
-          {/*<FaceRecognition />*/}
+        <FaceRecognition imageURL={this.state.imageURL}/>
       </div>
       );
     }
